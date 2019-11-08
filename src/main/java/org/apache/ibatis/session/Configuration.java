@@ -580,6 +580,7 @@ public class Configuration {
     } else {
       executor = new SimpleExecutor(this, transaction);
     }
+    //如果一级缓存开启，创建cachingExecutor
     if (cacheEnabled) {
       executor = new CachingExecutor(executor);
     }

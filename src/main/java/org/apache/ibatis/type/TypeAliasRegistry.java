@@ -115,6 +115,7 @@ public class TypeAliasRegistry {
       } else {
         value = (Class<T>) Resources.classForName(string);
       }
+      //拿到了pooledDatasourceFactory
       return value;
     } catch (ClassNotFoundException e) {
       throw new TypeException("Could not resolve type alias '" + string + "'.  Cause: " + e, e);
