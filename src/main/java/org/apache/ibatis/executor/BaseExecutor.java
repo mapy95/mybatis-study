@@ -107,6 +107,7 @@ public abstract class BaseExecutor implements Executor {
     return closed;
   }
 
+  //insert/update/delete调用的都是update方法，在update方法执行的时候，会先clear以及缓存信息
   @Override
   public int update(MappedStatement ms, Object parameter) throws SQLException {
     ErrorContext.instance().resource(ms.getResource()).activity("executing an update").object(ms.getId());
@@ -137,6 +138,22 @@ public abstract class BaseExecutor implements Executor {
     return query(ms, parameter, rowBounds, resultHandler, key, boundSql);
  }
 
+  /**
+   * @param ms
+   * @param parameter
+   * @param rowBounds
+   * @param resultHandler
+   * @param key
+   * @param boundSql
+   * @param <E>
+   * @return
+   * @throws SQLException
+   *
+   * 这里是对一级缓存的处理
+   *  key是一级缓存的key，如果以及缓存中没有，就去查询数据库，查询完数据库之后
+   *  判断当前localCache的作用域是否是statement，如果是statement，就清空缓存
+   *  也就是说，如果一级缓存的级别是statement，那么无法共享localCache
+   */
   @SuppressWarnings("unchecked")
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
@@ -166,6 +183,7 @@ public abstract class BaseExecutor implements Executor {
       }
       // issue #601
       deferredLoads.clear();
+
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
         // issue #482
         clearLocalCache();
@@ -236,11 +254,13 @@ public abstract class BaseExecutor implements Executor {
     return localCache.getObject(key) != null;
   }
 
+  //close默认是false
   @Override
   public void commit(boolean required) throws SQLException {
     if (closed) {
       throw new ExecutorException("Cannot commit, transaction is already closed");
     }
+    //SqlSession.commot()时，先清空一级缓存
     clearLocalCache();
     flushStatements();
     if (required) {
@@ -320,6 +340,7 @@ public abstract class BaseExecutor implements Executor {
     }
   }
 
+  //从数据库中查到数据之后，将原缓存中的key进行remove，然后再put一次新的数据
   private <E> List<E> queryFromDatabase(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql) throws SQLException {
     List<E> list;
     localCache.putObject(key, EXECUTION_PLACEHOLDER);
