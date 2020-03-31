@@ -79,19 +79,24 @@ public class XMLStatementBuilder extends BaseBuilder {
     String nodeName = context.getNode().getNodeName();
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
-    //如果是select，默认是false，如果是非select，默认是true
+    //是否刷新缓存，如果是select，默认是false，如果是非select，默认是true,
     boolean flushCache = context.getBooleanAttribute("flushCache", !isSelect);
+    //是否使用二级缓存，默认值：查询使用，非查询(insert、update、delete)不使用
     boolean useCache = context.getBooleanAttribute("useCache", isSelect);
+    //是否需要处理嵌套查询结果  group by
     boolean resultOrdered = context.getBooleanAttribute("resultOrdered", false);
 
     // Include Fragments before parsing
     XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, builderAssistant);
+    //替换incluses标签为对应的sql标签中的值
     includeParser.applyIncludes(context.getNode());
 
     // Parse selectKey after includes and remove them.
+    //解析selectkey
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
 
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
+    //解析sql,根据sql文本来判断是否需要动态解析，如果没有动态sql语句且只有 #{}的时候，直接使用静态解析(使用?占位符)
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
     String resultSets = context.getStringAttribute("resultSets");
     String keyProperty = context.getStringAttribute("keyProperty");

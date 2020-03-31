@@ -36,13 +36,20 @@ import org.apache.ibatis.logging.LogFactory;
  * @author Clinton Begin
  * @author Eduardo Macarron
  */
+
+/**
+ * 这个是mybatis自己的事务，会根据数据库事务的执行结果来执行
+ */
 public class TransactionalCache implements Cache {
 
   private static final Log log = LogFactory.getLog(TransactionalCache.class);
 
+  //这个是真正的二级缓存
   private final Cache delegate;
   private boolean clearOnCommit;
+  //待提交的缓存集合(类似于一个中间集合)
   private final Map<Object, Object> entriesToAddOnCommit;
+  //未命中的缓存集合，防止缓存穿透：就是一直请求一个为null的key，导致一直查询数据库
   private final Set<Object> entriesMissedInCache;
 
   public TransactionalCache(Cache delegate) {
@@ -82,6 +89,13 @@ public class TransactionalCache implements Cache {
     return null;
   }
 
+  /**
+   * @param key Can be any object but usually it is a {@link CacheKey}
+   * @param object
+   *
+   * tcm.putObject()，会先把当前要添加到缓存中的数据，放到一个中间集合(待提交的缓存信息)；当事务提交的时候，会从这个map遍历，然后把数据放到
+   * 真正的所谓的，二级缓存中
+   */
   @Override
   public void putObject(Object key, Object object) {
     entriesToAddOnCommit.put(key, object);
@@ -98,6 +112,7 @@ public class TransactionalCache implements Cache {
     entriesToAddOnCommit.clear();
   }
 
+  //当事务提交的时候，把数据放到真正的二级缓存中
   public void commit() {
     if (clearOnCommit) {
       delegate.clear();
@@ -106,6 +121,9 @@ public class TransactionalCache implements Cache {
     reset();
   }
 
+  /**
+   * 当事务回滚的时候，清空未命中的缓存集合、清空缓存中未命中缓存的信息
+   */
   public void rollback() {
     unlockMissedEntries();
     reset();

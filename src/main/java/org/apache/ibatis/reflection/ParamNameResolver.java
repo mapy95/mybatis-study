@@ -1,5 +1,5 @@
 /**
- *    Copyright 2009-2018 the original author or authors.
+ *    Copyright 2009-2019 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -60,6 +60,7 @@ public class ParamNameResolver {
         // skip special parameters
         continue;
       }
+      //在解析入参的时候，优先判断@Param注解对应的value
       String name = null;
       for (Annotation annotation : paramAnnotations[paramIndex]) {
         if (annotation instanceof Param) {
@@ -68,6 +69,7 @@ public class ParamNameResolver {
           break;
         }
       }
+      //如果没有加@Param注解，或者注解对应的value是null，就通过反射获取；这里所说的
       if (name == null) {
         // @Param was not specified.
         if (config.isUseActualParamName()) {

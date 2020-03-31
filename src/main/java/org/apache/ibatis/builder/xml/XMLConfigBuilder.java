@@ -91,7 +91,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   public Configuration parse() {
-      //在new XMLConfigBuilder的时候，默认置为了false，表示当前xml只能被解析一次
+      //在new XMLConfigBuilder的时候，默认置为了false，表示当前xml只能被解析一次，可能是解析比较耗性能
     if (parsed) {
       throw new BuilderException("Each XMLConfigBuilder can only be used once.");
     }
@@ -113,9 +113,16 @@ public class XMLConfigBuilder extends BaseBuilder {
       Properties settings = settingsAsProperties(root.evalNode("settings"));
       loadCustomVfs(settings);
       loadCustomLogImpl(settings);
+      /**
+       * 解析别名,将名别存到了一个map中TYPE_ALIASES，key值是别名，value是class;比如：map.put(boolean,Boolean.class);
+       * 这个map中存储的是程序员自己定义的别名和公用的
+       */
       typeAliasesElement(root.evalNode("typeAliases"));
+      //解析插件
       pluginElement(root.evalNode("plugins"));
+      //自定义实例化对象的行为
       objectFactoryElement(root.evalNode("objectFactory"));
+      //下面两个主要是配合 MateObject来使用的；方便反射操作实体类
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
       settingsElement(settings);
@@ -124,7 +131,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
       typeHandlerElement(root.evalNode("typeHandlers"));
-      //解析mapper配置信息，将SQL封装成mapperstatement
+      //解析mapper配置信息，将SQL封装成mapperstatement，并把mapperProxyFactory存到map中
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -168,6 +175,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
+        //设置别名有两种方式，一种是设置package，批量设置别名，默认是类名首字母小写；另外一种是单独设置某个类的别名
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);

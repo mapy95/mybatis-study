@@ -89,13 +89,19 @@ public class CachingExecutor implements Executor {
     return delegate.queryCursor(ms, parameter, rowBounds);
   }
 
-  //这是mybatis的二级缓存
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, CacheKey key, BoundSql boundSql)
       throws SQLException {
     Cache cache = ms.getCache();
     if (cache != null) {
+      /**
+       * 这里的cache是mybatis的二级缓存。如果二级缓存不为null，并且二级缓存开启了，就从二级缓存中获取数据，否则，就从一级缓存中取数据，如果一级缓存中
+       * 也没有数据，就从数据库中获取，并将查询结果存入到一级缓存和二级缓存中
+       *
+       * flushCacheIfRequired():是指xml中，select、update、delete、insert节点的flushCache属性，默认：insert、delete、update是true，select是false
+       */
       flushCacheIfRequired(ms);
+      //这里对应的是useCache属性；默认是true
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);
         @SuppressWarnings("unchecked")

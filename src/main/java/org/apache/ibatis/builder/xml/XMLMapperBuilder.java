@@ -91,13 +91,15 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   public void parse() {
     if (!configuration.isResourceLoaded(resource)) {
-      //解析mapper
+      //解析mapper，并把sql语句包装成mappedStatement put到map中
       configurationElement(parser.evalNode("/mapper"));
+      //
       configuration.addLoadedResource(resource);
-      //将namespace和mapperFactory对象存放到一个map中，在getMapper的时候 有用到
+      //将namespace和mapperProxyFactory对象存放到一个map中，在getMapper的时候 有用到
       bindMapperForNamespace();
     }
 
+    //重新解析在前面解析过程中报错的xml；incompleteStatements
     parsePendingResultMaps();
     parsePendingCacheRefs();
     parsePendingStatements();
@@ -107,6 +109,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     return sqlFragments.get(refid);
   }
 
+  //解析mapper.xml配置文件
   private void configurationElement(XNode context) {
     try {
       String namespace = context.getStringAttribute("namespace");
@@ -140,6 +143,7 @@ public class XMLMapperBuilder extends BaseBuilder {
         //点进去下一步
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
+        //如果解析<select>等xml的时候报错，会存储到一个集合中；等全部解析完了，再重新解析
         configuration.addIncompleteStatement(statementParser);
       }
     }

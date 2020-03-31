@@ -125,7 +125,9 @@ public class MapperAnnotationBuilder {
 
   public void parse() {
     String resource = type.toString();
+    //判断是否被解析过
     if (!configuration.isResourceLoaded(resource)) {
+      //先解析xml
       loadXmlResource();
       configuration.addLoadedResource(resource);
       assistant.setCurrentNamespace(type.getName());
@@ -308,6 +310,7 @@ public class MapperAnnotationBuilder {
       Integer timeout = null;
       StatementType statementType = StatementType.PREPARED;
       ResultSetType resultSetType = null;
+      //判断是增删改查的哪个类型
       SqlCommandType sqlCommandType = getSqlCommandType(method);
       boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
       boolean flushCache = !isSelect;
