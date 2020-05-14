@@ -136,7 +136,9 @@ public class MapperMethod {
 
   private <E> Object executeForMany(SqlSession sqlSession, Object[] args) {
     List<E> result;
+    //这一行代码是对入参进行转换  param1  Parma2....
     Object param = method.convertArgsToSqlCommandParam(args);
+    //分页  rowBounds是在内存中分页的，不合理
     if (method.hasRowBounds()) {
       RowBounds rowBounds = method.extractRowBounds(args);
       result = sqlSession.<E>selectList(command.getName(), param, rowBounds);

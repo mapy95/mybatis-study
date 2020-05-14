@@ -95,7 +95,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       configurationElement(parser.evalNode("/mapper"));
       //
       configuration.addLoadedResource(resource);
-      //将namespace和mapperProxyFactory对象存放到一个map中，在getMapper的时候 有用到
+      //将namespace和mapperProxyFactory对象存放到一个knownMappers中，在getMapper的时候 有用到
       bindMapperForNamespace();
     }
 
@@ -119,7 +119,9 @@ public class XMLMapperBuilder extends BaseBuilder {
       builderAssistant.setCurrentNamespace(namespace);
       cacheRefElement(context.evalNode("cache-ref"));
       cacheElement(context.evalNode("cache"));
+      //解析mapper.xml中的parameterMap节点，解析之后，存储到configuration对象中的parameterMaps
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+      //incompleteResultMaps 存储到这个map中
       resultMapElements(context.evalNodes("/mapper/resultMap"));
       sqlElement(context.evalNodes("/mapper/sql"));
       //这里是解析增删改查语句的

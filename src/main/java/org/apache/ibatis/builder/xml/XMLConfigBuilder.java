@@ -115,7 +115,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       loadCustomLogImpl(settings);
       /**
        * 解析别名,将名别存到了一个map中TYPE_ALIASES，key值是别名，value是class;比如：map.put(boolean,Boolean.class);
-       * 这个map中存储的是程序员自己定义的别名和公用的
+       * 这个map中存储的是程序员自己定义的别名和公用的(比如：数据源信息)
        */
       typeAliasesElement(root.evalNode("typeAliases"));
       //解析插件
@@ -127,11 +127,15 @@ public class XMLConfigBuilder extends BaseBuilder {
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
-      //在这里解析environment信息，获取到数据源
+      //在这里解析environment信息，获取到数据源；根据配置文件中DataSource节点设置的type类型，从别名的map中获取到对应的dataSourceFactory
       environmentsElement(root.evalNode("environments"));
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
       typeHandlerElement(root.evalNode("typeHandlers"));
-      //解析mapper配置信息，将SQL封装成mapperstatement，并把mapperProxyFactory存到map中
+      /**
+       * 在这个方法中，完成了两个重要的事情：
+       *  1.解析mapper配置信息，将SQL封装成mapperstatement，并将该对象存到mappedStatement这个map中
+       *  2.把根据接口生成的mapperProxyFactory存到knownMappers这个map中
+       */
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
@@ -260,6 +264,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void settingsElement(Properties props) {
     configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(props.getProperty("autoMappingBehavior", "PARTIAL")));
     configuration.setAutoMappingUnknownColumnBehavior(AutoMappingUnknownColumnBehavior.valueOf(props.getProperty("autoMappingUnknownColumnBehavior", "NONE")));
+    //二级缓存的cacheEnabled，默认是开启的，为true
     configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), true));
     configuration.setProxyFactory((ProxyFactory) createInstance(props.getProperty("proxyFactory")));
     configuration.setLazyLoadingEnabled(booleanValueOf(props.getProperty("lazyLoadingEnabled"), false));
@@ -293,8 +298,10 @@ public class XMLConfigBuilder extends BaseBuilder {
       for (XNode child : context.getChildren()) {
         String id = child.getStringAttribute("id");
         if (isSpecifiedEnvironment(id)) {
+          /**
+           * 下面获取数据源工厂和事务工厂都是一样的原理，根据配置文件中设置的类型，从保存别名的map中获取到对应的factory
+           */
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
-          //解析获取数据源
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
           DataSource dataSource = dsFactory.getDataSource();
           Environment.Builder environmentBuilder = new Environment.Builder(id)

@@ -96,7 +96,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     processSelectKeyNodes(id, parameterTypeClass, langDriver);
 
     // Parse the SQL (pre: <selectKey> and <include> were parsed and removed)
-    //解析sql,根据sql文本来判断是否需要动态解析，如果没有动态sql语句且只有 #{}的时候，直接使用静态解析(使用?占位符)
+    //解析sql,根据sql文本来判断是否需要动态解析，如果没有动态sql语句且只有 #{}的时候，直接使用静态解析(使用?占位符);如果有${},就不解析，在后面使用的时候再解析
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
     String resultSets = context.getStringAttribute("resultSets");
     String keyProperty = context.getStringAttribute("keyProperty");

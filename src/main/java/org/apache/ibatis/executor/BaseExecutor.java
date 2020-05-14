@@ -132,6 +132,7 @@ public abstract class BaseExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    //如果SQL是${} 就是在这里映射的，如果是#{} 这里不会解析
     BoundSql boundSql = ms.getBoundSql(parameter);
     //创建一级缓存  cacheKey = 方法名+ sql 语句+参数类型  +参数值+额外参数
     CacheKey key = createCacheKey(ms, parameter, rowBounds, boundSql);

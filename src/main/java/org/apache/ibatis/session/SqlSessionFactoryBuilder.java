@@ -46,6 +46,10 @@ public class SqlSessionFactoryBuilder {
 
   public SqlSessionFactory build(Reader reader, String environment, Properties properties) {
     try {
+      /**
+       * 这里在new XMLConfigBuilder的时候，会在里面的代码中，new Configuration()这个对象，在初始化这个对象的时候，会将一些已经初始化的对象对应的别名存到TYPE_ALIASES这个map中
+       * 在后面根据配置文件获取数据源的时候，是直接根据配置的<dataSource type="POOLED">这个type，从这个map中获取到对应的数据源
+       */
       XMLConfigBuilder parser = new XMLConfigBuilder(reader, environment, properties);
       return build(parser.parse());
     } catch (Exception e) {
