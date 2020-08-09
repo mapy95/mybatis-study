@@ -99,9 +99,10 @@ public class XMLMapperBuilder extends BaseBuilder {
       bindMapperForNamespace();
     }
 
-    //重新解析在前面解析过程中报错的xml；incompleteStatements
+
     parsePendingResultMaps();
     parsePendingCacheRefs();
+    //重新解析在前面解析过程中报错的xml；incompleteStatements
     parsePendingStatements();
   }
 
@@ -124,7 +125,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       //incompleteResultMaps 存储到这个map中
       resultMapElements(context.evalNodes("/mapper/resultMap"));
       sqlElement(context.evalNodes("/mapper/sql"));
-      //这里是解析增删改查语句的
+      //这里是解析增删改查语句的  方法1
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
     } catch (Exception e) {
       throw new BuilderException("Error parsing Mapper XML. The XML location is '" + resource + "'. Cause: " + e, e);
@@ -135,6 +136,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (configuration.getDatabaseId() != null) {
       buildStatementFromContext(list, configuration.getDatabaseId());
     }
+    //方法2
     buildStatementFromContext(list, null);
   }
 
@@ -142,7 +144,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     for (XNode context : list) {
       final XMLStatementBuilder statementParser = new XMLStatementBuilder(configuration, builderAssistant, context, requiredDatabaseId);
       try {
-        //点进去下一步
+        //点进去下一步 方法3
         statementParser.parseStatementNode();
       } catch (IncompleteElementException e) {
         //如果解析<select>等xml的时候报错，会存储到一个集合中；等全部解析完了，再重新解析
@@ -438,16 +440,19 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (namespace != null) {
       Class<?> boundType = null;
       try {
+        // 根据mapper.xml中的namespace，通过class.forName获取到对应的class对象，这也是mapper.xml的namespace必须要和接口的全类名一致的原因
         boundType = Resources.classForName(namespace);
       } catch (ClassNotFoundException e) {
         //ignore, bound type is not required
       }
       if (boundType != null) {
+        // 如果当前knownMappers已经包含了当前接口，就无需再次添加
         if (!configuration.hasMapper(boundType)) {
           // Spring may not know the real resource name so we set a flag
           // to prevent loading again this resource from the mapper interface
           // look at MapperAnnotationBuilder#loadXmlResource
           configuration.addLoadedResource("namespace:" + namespace);
+          // 将接口和接口对应的mapperProxyFactory放入到knownMappers中
           configuration.addMapper(boundType);
         }
       }

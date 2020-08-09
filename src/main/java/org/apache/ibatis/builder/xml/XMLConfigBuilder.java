@@ -385,7 +385,10 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void mapperElement(XNode parent) throws Exception {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
-        //在配置文件中，配置mapper.xml文件有四种方式，这里按照优先级记进行解析
+        /**
+         * 在配置文件中，配置mapper.xml文件有四种方式，这里按照优先级进行解析
+         * 这也是优先级的根本原因：源码中，就是按照 package  ->  resource  -->  url  -->  class的优先级来解析的
+         */
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
           configuration.addMappers(mapperPackage);
