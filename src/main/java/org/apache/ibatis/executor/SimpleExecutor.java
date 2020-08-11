@@ -53,6 +53,17 @@ public class SimpleExecutor extends BaseExecutor {
     }
   }
 
+    /**
+     * 最底层，会调用这里查询数据库
+     * @param ms:mappedStatement对象
+     * @param parameter
+     * @param rowBounds
+     * @param resultHandler
+     * @param boundSql
+     * @param <E>
+     * @return
+     * @throws SQLException
+     */
   @Override
   public <E> List<E> doQuery(MappedStatement ms, Object parameter, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
     Statement stmt = null;
@@ -84,6 +95,7 @@ public class SimpleExecutor extends BaseExecutor {
     Statement stmt;
     Connection connection = getConnection(statementLog);
     stmt = handler.prepare(connection, transaction.getTimeout());
+    // 完成属性的赋值
     handler.parameterize(stmt);
     return stmt;
   }

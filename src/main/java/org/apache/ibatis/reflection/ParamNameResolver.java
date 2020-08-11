@@ -108,6 +108,11 @@ public class ParamNameResolver {
    * In addition to the default names, this method also adds the generic names (param1, param2,
    * ...).
    * </p>
+   *
+   * 这里是对sql的请求入参进行转换
+   *    如果入参为空，就返回null
+   *    如果入参只有一个，就返回这一个入参
+   *    如果入参有多个（String name,Integer age）这种形式，就会走最后面的else的逻辑
    */
   public Object getNamedParams(Object[] args) {
     final int paramCount = names.size();
@@ -121,6 +126,7 @@ public class ParamNameResolver {
       for (Map.Entry<Integer, String> entry : names.entrySet()) {
         param.put(entry.getValue(), args[entry.getKey()]);
         // add generic param names (param1, param2, ...)
+        // 这里其实就是把arg0/1/2转换为param1/2/3
         final String genericParamName = GENERIC_NAME_PREFIX + String.valueOf(i + 1);
         // ensure not to overwrite parameter named with @Param
         if (!names.containsValue(genericParamName)) {

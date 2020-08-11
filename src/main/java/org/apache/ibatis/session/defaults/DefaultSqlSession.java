@@ -144,7 +144,7 @@ public class DefaultSqlSession implements SqlSession {
   @Override
   public <E> List<E> selectList(String statement, Object parameter, RowBounds rowBounds) {
     try {
-      //根据key从configuration中mappedStatements获取对应的mapperstatement
+      //根据key从configuration中mappedStatements获取对应的mapperstatement对象，mappedStatement对象就是在初始化的时候，对mapper.xml中每个sql进行解析封装
       MappedStatement ms = configuration.getMappedStatement(statement);
       return executor.query(ms, wrapCollection(parameter), rowBounds, Executor.NO_RESULT_HANDLER);
     } catch (Exception e) {

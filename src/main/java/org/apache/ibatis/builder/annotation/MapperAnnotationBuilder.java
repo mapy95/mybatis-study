@@ -298,6 +298,10 @@ public class MapperAnnotationBuilder {
     return null;
   }
 
+    /**
+     * 解析在dao接口上加的@Select @Update等这种方式的SQL
+     * @param method
+     */
   void parseStatement(Method method) {
     Class<?> parameterTypeClass = getParameterType(method);
     LanguageDriver languageDriver = getLanguageDriver(method);

@@ -152,8 +152,13 @@ public class TypeAliasRegistry {
     if (alias == null) {
       throw new TypeException("The parameter alias cannot be null");
     }
-    // issue #748  别名不区分大小写
+    // issue #748  别名不区分大小写，会统一将别名转换为小写
     String key = alias.toLowerCase(Locale.ENGLISH);
+      /**
+       * 这里是为了防止一个别名对应多个类的场景；这个判断的意思是：如果key存在map中，且key对应的类不为null，且新入参的value和原有的value不一样，就会报错
+       * 比如：map --> java.util.Map
+       *    如果此时，注册一个 map --> java.util.ConcurrentHashMap,那这里就会报错
+       */
     if (TYPE_ALIASES.containsKey(key) && TYPE_ALIASES.get(key) != null && !TYPE_ALIASES.get(key).equals(value)) {
       throw new TypeException("The alias '" + alias + "' is already mapped to the value '" + TYPE_ALIASES.get(key).getName() + "'.");
     }

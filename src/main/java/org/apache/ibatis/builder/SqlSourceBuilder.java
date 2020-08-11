@@ -63,6 +63,11 @@ public class SqlSourceBuilder extends BaseBuilder {
       return parameterMappings;
     }
 
+      /**
+       * 这里是把所有的#{} 替换为 ？
+       * @param content
+       * @return
+       */
     @Override
     public String handleToken(String content) {
       parameterMappings.add(buildParameterMapping(content));

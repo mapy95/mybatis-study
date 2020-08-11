@@ -29,6 +29,8 @@ import org.apache.ibatis.session.SqlSession;
 /**
  * @author Clinton Begin
  * @author Eduardo Macarron
+ *
+ * 必须实现InvocationHandler接口，才能进行动态代理
  */
 public class MapperProxy<T> implements InvocationHandler, Serializable {
 
@@ -46,7 +48,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     try {
-      //判断是不是调用object的原生方法，如果是，就无需代理(Object.equals等)
+      //判断是不是调用object的原生方法且没有重写，如果是，就无需代理(Object.equals()、hashCode()等方法)
       if (Object.class.equals(method.getDeclaringClass())) {
         return method.invoke(this, args);
       } else if (isDefaultMethod(method)) {
@@ -55,6 +57,7 @@ public class MapperProxy<T> implements InvocationHandler, Serializable {
     } catch (Throwable t) {
       throw ExceptionUtil.unwrapThrowable(t);
     }
+    //根据method创建一个方法缓存对象，如果第二次调用相同的方法，那就直接从缓存中获取，无需再次生成新的
     final MapperMethod mapperMethod = cachedMapperMethod(method);
     return mapperMethod.execute(sqlSession, args);
   }

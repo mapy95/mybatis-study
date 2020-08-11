@@ -91,9 +91,9 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   public void parse() {
     if (!configuration.isResourceLoaded(resource)) {
-      //解析mapper，并把sql语句包装成mappedStatement put到map中
+      //解析mapper.xml文件，并把sql语句包装成mappedStatement put到map中
       configurationElement(parser.evalNode("/mapper"));
-      //
+      // 这里是将本次解析的resource存入到loadedResources这个set集合中，在嫌这一行代码里面就会用到
       configuration.addLoadedResource(resource);
       //将namespace和mapperProxyFactory对象存放到一个knownMappers中，在getMapper的时候 有用到
       bindMapperForNamespace();
@@ -275,6 +275,10 @@ public class XMLMapperBuilder extends BaseBuilder {
                 resultMapNode.getStringAttribute("javaType"))));
     String extend = resultMapNode.getStringAttribute("extends");
     Boolean autoMapping = resultMapNode.getBooleanAttribute("autoMapping");
+      /**
+       * 根据type，获取到对应的class对象；如果在mybatis.xml文件中配置了别名，在设置resultMap节点的时候，type可以直接使用别名
+       * 因为在这里，会从别名对应的map集合中，查找一遍，如果别名库中查找不到，会知己而根据type，调用Class.forName(name, true, cl);方法，返回一个初始化的对象
+       */
     Class<?> typeClass = resolveClass(type);
     if (typeClass == null) {
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);

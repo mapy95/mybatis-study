@@ -113,7 +113,7 @@ public abstract class BaseBuilder {
       return null;
     }
     try {
-      //解析获取数据源
+      //根据别名，获取别名对应的map中对应的class
       return resolveAlias(alias);
     } catch (Exception e) {
       throw new BuilderException("Error resolving class. Cause: " + e, e);

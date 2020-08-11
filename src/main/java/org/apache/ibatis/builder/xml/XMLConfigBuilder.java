@@ -135,6 +135,8 @@ public class XMLConfigBuilder extends BaseBuilder {
        * 在这个方法中，完成了两个重要的事情：
        *  1.解析mapper配置信息，将SQL封装成mapperstatement，并将该对象存到mappedStatement这个map中
        *  2.把根据接口生成的mapperProxyFactory存到knownMappers这个map中
+       *
+       *  这里还是解析的是mybatis的xml中对应的<Mapper></Mapper>节点，在mybatis.xml文件中，我们会在该节点下，配置mapper.xml文件的路径信息
        */
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
@@ -179,7 +181,10 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void typeAliasesElement(XNode parent) {
     if (parent != null) {
       for (XNode child : parent.getChildren()) {
-        //设置别名有两种方式，一种是设置package，批量设置别名，默认是类名首字母小写；另外一种是单独设置某个类的别名
+          /**
+           * 设置别名有两种方式，一种是设置package，批量设置别名，默认是类名首字母小写；另外一种是单独设置某个类的别名
+           * 对于别名的处理，都是将解析之后的别名和对应类存储到了一个map集合中
+           */
         if ("package".equals(child.getName())) {
           String typeAliasPackage = child.getStringAttribute("name");
           configuration.getTypeAliasRegistry().registerAliases(typeAliasPackage);
@@ -388,6 +393,8 @@ public class XMLConfigBuilder extends BaseBuilder {
         /**
          * 在配置文件中，配置mapper.xml文件有四种方式，这里按照优先级进行解析
          * 这也是优先级的根本原因：源码中，就是按照 package  ->  resource  -->  url  -->  class的优先级来解析的
+         *
+         * resource、URL、class三者只能配置一个，如果三个都配置，会有问题，抛出异常
          */
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
