@@ -39,17 +39,32 @@ import org.apache.ibatis.logging.LogFactory;
 
 /**
  * 这个是mybatis自己的事务，会根据数据库事务的执行结果来执行
+ *
+ * 为了防止事务未提交时，更新缓存造成脏数据
+ * 比如：
+ * 开启事务之后，插入一条记录，此时，执行一次查询，就会将新插入的记录，写入缓存中，但是事务提交失败，导致数据库回滚，缓存并没有回滚
+ * 这样就是有问题的
  */
 public class TransactionalCache implements Cache {
 
   private static final Log log = LogFactory.getLog(TransactionalCache.class);
 
-  //这个是真正的二级缓存
+    /**
+     * 这里使用的是装饰者模式，这里的delegate就是下一个要修饰的缓存处理类
+     */
   private final Cache delegate;
+    /**
+     * 是否需要清空待提交空间的标识
+     */
   private boolean clearOnCommit;
-  //待提交的缓存集合(类似于一个中间集合)
+    /**
+     * 待提交的缓存集合(类似于一个中间集合)
+     * 待事务提交之后，将待提交的缓存集合更新到缓存中
+     */
   private final Map<Object, Object> entriesToAddOnCommit;
-  //未命中的缓存集合，防止缓存穿透：就是一直请求一个为null的key，导致一直查询数据库
+    /**
+     * 未命中的缓存集合，防止缓存穿透：就是一直请求一个为null的key，导致一直查询数据库
+     */
   private final Set<Object> entriesMissedInCache;
 
   public TransactionalCache(Cache delegate) {
@@ -73,6 +88,9 @@ public class TransactionalCache implements Cache {
   public Object getObject(Object key) {
     // issue #116
     Object object = delegate.getObject(key);
+      /**
+       * 如果根据key查询到的object为null，就将key放到这个map中
+       */
     if (object == null) {
       entriesMissedInCache.add(key);
     }

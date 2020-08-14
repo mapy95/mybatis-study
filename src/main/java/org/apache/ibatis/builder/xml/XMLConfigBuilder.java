@@ -125,6 +125,9 @@ public class XMLConfigBuilder extends BaseBuilder {
       //下面两个主要是配合 MateObject来使用的；方便反射操作实体类
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
+        /**
+         * 全局的配置信息
+         */
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
       //在这里解析environment信息，获取到数据源；根据配置文件中DataSource节点设置的type类型，从别名的map中获取到对应的dataSourceFactory
@@ -133,10 +136,10 @@ public class XMLConfigBuilder extends BaseBuilder {
       typeHandlerElement(root.evalNode("typeHandlers"));
       /**
        * 在这个方法中，完成了两个重要的事情：
-       *  1.解析mapper配置信息，将SQL封装成mapperstatement，并将该对象存到mappedStatement这个map中
+       *  1.解析mapper配置信息，将SQL解析并封装成mappedStatement，并将该对象存到mappedStatements这个map中
        *  2.把根据接口生成的mapperProxyFactory存到knownMappers这个map中
        *
-       *  这里还是解析的是mybatis的xml中对应的<Mapper></Mapper>节点，在mybatis.xml文件中，我们会在该节点下，配置mapper.xml文件的路径信息
+       *  这里解析的是mybatis的xml中对应的<Mapper></Mapper>节点，在mybatis.xml文件中，我们会在该节点下，配置mapper.xml文件的路径信息
        */
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
@@ -269,7 +272,10 @@ public class XMLConfigBuilder extends BaseBuilder {
   private void settingsElement(Properties props) {
     configuration.setAutoMappingBehavior(AutoMappingBehavior.valueOf(props.getProperty("autoMappingBehavior", "PARTIAL")));
     configuration.setAutoMappingUnknownColumnBehavior(AutoMappingUnknownColumnBehavior.valueOf(props.getProperty("autoMappingUnknownColumnBehavior", "NONE")));
-    //二级缓存的cacheEnabled，默认是开启的，为true
+      /**
+       * 二级缓存的cacheEnabled，默认是开启的，为true
+       * 全局缓存
+       */
     configuration.setCacheEnabled(booleanValueOf(props.getProperty("cacheEnabled"), true));
     configuration.setProxyFactory((ProxyFactory) createInstance(props.getProperty("proxyFactory")));
     configuration.setLazyLoadingEnabled(booleanValueOf(props.getProperty("lazyLoadingEnabled"), false));

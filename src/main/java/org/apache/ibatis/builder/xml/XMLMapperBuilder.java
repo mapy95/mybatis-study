@@ -119,6 +119,9 @@ public class XMLMapperBuilder extends BaseBuilder {
       }
       builderAssistant.setCurrentNamespace(namespace);
       cacheRefElement(context.evalNode("cache-ref"));
+        /**
+         * 解析mapper.xml文件中的<Cache></Cache>节点的配置
+         */
       cacheElement(context.evalNode("cache"));
       //解析mapper.xml中的parameterMap节点，解析之后，存储到configuration对象中的parameterMaps
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
@@ -210,6 +213,21 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+    /**
+     * 需要注意一点，下面说的这些配置，都是在mapper.xml的<Cache></Cache>节点中进行配置的
+     *
+     * 1.这里的PERPETUAL就是mybatis自己的默认的处理二级缓存的实现类，如果程序员要自己去处理二级缓存,就需要自己去实现cache接口，并且将实现类配置在mapper.xml文件中的<Cache></Cache>
+     * 节点的type属性
+     * 如果程序员指定了，就会用程序员指定的缓存实现类去处理二级缓存，否则，默认使用org.apache.ibatis.cache.impl.PerpetualCache
+     * EhCache应该就是利用这个来进行扩展的
+     *
+     * 2.mybatis二级缓存，会经过一些了的cache实现类，进行处理，其中有一个是来对缓存进行回收的，不同的回收策略对应不同的回收处理类，程序员可以自己指定，默认是LruCache(最近最少使用的，移除最长时间不被使用的对象)
+     * FIFO：先进先出，按照对象的进入顺序来移除
+     * SOFT:软引用--移除基于垃圾回收器状态和软引用规则的对象
+     * WEAK: 弱引用：更积极地移除基于垃圾收集器状态和弱引用规则的对象
+     *
+     * @param context
+     */
   private void cacheElement(XNode context) {
     if (context != null) {
       String type = context.getStringAttribute("type", "PERPETUAL");
