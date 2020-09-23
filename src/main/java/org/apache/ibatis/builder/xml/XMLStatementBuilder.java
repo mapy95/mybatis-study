@@ -79,7 +79,7 @@ public class XMLStatementBuilder extends BaseBuilder {
     String nodeName = context.getNode().getNodeName();
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
-    //是否刷新缓存，如果是select，默认是false，如果是非select，默认是true,
+    //是否刷新缓存，如果是select，默认是false，如果是非select，默认是true, 这个配置是针对二级缓存的，只有在开启二级缓存的时候  这个配置才会生效
     boolean flushCache = context.getBooleanAttribute("flushCache", !isSelect);
     //是否使用二级缓存，默认值：查询使用，非查询(insert、update、delete)不使用
     boolean useCache = context.getBooleanAttribute("useCache", isSelect);

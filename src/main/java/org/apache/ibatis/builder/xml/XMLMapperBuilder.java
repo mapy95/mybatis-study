@@ -56,6 +56,9 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private final XPathParser parser;
   private final MapperBuilderAssistant builderAssistant;
+    /**
+     * 存储mapper.xml文件中的<Sql></Sql>节点的数据
+     */
   private final Map<String, XNode> sqlFragments;
   private final String resource;
 
@@ -93,7 +96,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     if (!configuration.isResourceLoaded(resource)) {
       //解析mapper.xml文件，并把sql语句包装成mappedStatement put到map中
       configurationElement(parser.evalNode("/mapper"));
-      // 这里是将本次解析的resource存入到loadedResources这个set集合中，在嫌这一行代码里面就会用到
+      // 这里是将本次解析的resource存入到loadedResources这个set集合中，在下面这一行代码里面就会用到
       configuration.addLoadedResource(resource);
       //将namespace和mapperProxyFactory对象存放到一个knownMappers中，在getMapper的时候 有用到
       bindMapperForNamespace();
@@ -125,8 +128,12 @@ public class XMLMapperBuilder extends BaseBuilder {
       cacheElement(context.evalNode("cache"));
       //解析mapper.xml中的parameterMap节点，解析之后，存储到configuration对象中的parameterMaps
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
-      //incompleteResultMaps 存储到这个map中
+      //解析resultMap节点，并存储到这个map中 org.apache.ibatis.session.Configuration.resultMaps
       resultMapElements(context.evalNodes("/mapper/resultMap"));
+        /**
+         * 解析mapper.xml中的sql节点，并存入到
+         * org.apache.ibatis.builder.xml.XMLMapperBuilder#sqlFragments
+         */
       sqlElement(context.evalNodes("/mapper/sql"));
       //这里是解析增删改查语句的  方法1
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
@@ -231,6 +238,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   private void cacheElement(XNode context) {
     if (context != null) {
       String type = context.getStringAttribute("type", "PERPETUAL");
+      //这里是根据type从存放别名的map中获取对应的class类
       Class<? extends Cache> typeClass = typeAliasRegistry.resolveAlias(type);
       String eviction = context.getStringAttribute("eviction", "LRU");
       Class<? extends Cache> evictionClass = typeAliasRegistry.resolveAlias(eviction);
@@ -269,6 +277,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
   }
 
+    /**
+     * 这里的list集合是：当前mapper.xml配置文件中，所有的<ResultMap></ResultMap>节点的集合
+     * 下面会对所有的resultMap进行依次的解析
+     * @param list
+     * @throws Exception
+     */
   private void resultMapElements(List<XNode> list) throws Exception {
     for (XNode resultMapNode : list) {
       try {
@@ -285,8 +299,10 @@ public class XMLMapperBuilder extends BaseBuilder {
 
   private ResultMap resultMapElement(XNode resultMapNode, List<ResultMapping> additionalResultMappings, Class<?> enclosingType) throws Exception {
     ErrorContext.instance().activity("processing " + resultMapNode.getValueBasedIdentifier());
+    // 这是<ResultMap>节点的id属性
     String id = resultMapNode.getStringAttribute("id",
         resultMapNode.getValueBasedIdentifier());
+    // 这是<ResultMap>节点的type属性
     String type = resultMapNode.getStringAttribute("type",
         resultMapNode.getStringAttribute("ofType",
             resultMapNode.getStringAttribute("resultType",
@@ -305,12 +321,24 @@ public class XMLMapperBuilder extends BaseBuilder {
     List<ResultMapping> resultMappings = new ArrayList<>();
     resultMappings.addAll(additionalResultMappings);
     List<XNode> resultChildren = resultMapNode.getChildren();
+      /**
+       * resultChildren：是当前resultMap下的所有属性
+       *
+       * resultMappings：
+       * 0 = {ResultMapping@1413} "ResultMapping{property='id', column='id', javaType=int, jdbcType=null, nestedResultMapId='null', nestedQueryId='null', notNullColumns=[], columnPrefix='null', flags=[ID], composites=[], resultSet='null', foreignColumn='null', lazy=false}"
+       * 1 = {ResultMapping@1473} "ResultMapping{property='operChannelId', column='oper_channel_id', javaType=class java.lang.String, jdbcType=null, nestedResultMapId='null', nestedQueryId='null', notNullColumns=[], columnPrefix='null', flags=[], composites=[], resultSet='null', foreignColumn='null', lazy=false}"
+       * 2 = {ResultMapping@1474} "ResultMapping{property='operChannelName', column='oper_channel_name', javaType=class java.lang.String, jdbcType=null, nestedResultMapId='null', nestedQueryId='null', notNullColumns=[], columnPrefix='null', flags=[], composites=[], resultSet='null', foreignColumn='null', lazy=false}"
+       */
     for (XNode resultChild : resultChildren) {
       if ("constructor".equals(resultChild.getName())) {
         processConstructorElement(resultChild, typeClass, resultMappings);
       } else if ("discriminator".equals(resultChild.getName())) {
         discriminator = processDiscriminatorElement(resultChild, typeClass, resultMappings);
       } else {
+          /**
+           * 一般都是进入到这里的，前面两种我暂时没用过
+           * 常用的设置，一般是两种  <id></id>和<result></result>
+           */
         List<ResultFlag> flags = new ArrayList<>();
         if ("id".equals(resultChild.getName())) {
           flags.add(ResultFlag.ID);
@@ -320,6 +348,11 @@ public class XMLMapperBuilder extends BaseBuilder {
     }
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator, resultMappings, autoMapping);
     try {
+        /**
+         * 在这个方法里面，会对resultMap的对象属性进行build，最后放入到了Configuration的一个map集合中
+         * map的key是 namespace + resultMap.id，value就是构建的resultMap对象
+         * protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
+         */
       return resultMapResolver.resolve();
     } catch (IncompleteElementException  e) {
       configuration.addIncompleteResultMap(resultMapResolver);

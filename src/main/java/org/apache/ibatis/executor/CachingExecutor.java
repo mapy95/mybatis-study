@@ -103,7 +103,7 @@ public class CachingExecutor implements Executor {
        */
       flushCacheIfRequired(ms);
         /**
-         * 这里对应的是useCache属性；默认是true
+         * 这里对应的是useCache属性；该属性值：如果是select标签，是true，非select标签为false
          * mapper.xml文件中  <Select></Select>标签的属性
          */
       if (ms.isUseCache() && resultHandler == null) {
@@ -111,12 +111,18 @@ public class CachingExecutor implements Executor {
         @SuppressWarnings("unchecked")
         List<E> list = (List<E>) tcm.getObject(cache, key);
         if (list == null) {
+            /**
+             * 调用一级缓存；
+             * 从一级缓存中查到数据之后，调用tcm的put方法，这里的put是把对应的对象，放到了一个中间变量map集合中，这样做，是为了防止脏数据
+             * 只有在事务提交的时候，才会真正的把数据写入到二级缓存
+             */
           list = delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
           tcm.putObject(cache, key, list); // issue #578 and #116
         }
         return list;
       }
     }
+    //调用一级缓存
     return delegate.query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 

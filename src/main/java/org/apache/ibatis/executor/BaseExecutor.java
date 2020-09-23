@@ -185,6 +185,12 @@ public abstract class BaseExecutor implements Executor {
       // issue #601
       deferredLoads.clear();
 
+        /**
+         * 一级缓存无法关闭，但是可以设置一级缓存的作用范围，
+         * 通过在mybatis-config.xml的settings节点配置
+         * <setting name="localCacheScope" value="SESSION"/>
+         * 有两个级别，session和statement；如果设置的是statement级别，那么每次查询之后，都会清空缓存
+         */
       if (configuration.getLocalCacheScope() == LocalCacheScope.STATEMENT) {
         // issue #482
         clearLocalCache();

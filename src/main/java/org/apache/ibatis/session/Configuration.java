@@ -97,6 +97,11 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
 /**
  * @author Clinton Begin
  */
+
+/**
+ * mybatis会把所有的xml以及配置信息转换为configuration下的某一个元素
+ * 也即：configuration是所有配置文件的根节点
+ */
 public class Configuration {
 
   protected Environment environment;
@@ -139,6 +144,7 @@ public class Configuration {
    * Used to create Configuration for loading deserialized unread properties.
    *
    * @see <a href='https://code.google.com/p/mybatis/issues/detail?id=300'>Issue 300 (google code)</a>
+   *
    */
   protected Class<?> configurationFactory;
 
@@ -152,6 +158,7 @@ public class Configuration {
       .conflictMessageProducer((savedValue, targetValue) ->
           ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
+  //存储mapper.xml文件中的ResultMap节点，key是 namespace+ResultMap.id
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");

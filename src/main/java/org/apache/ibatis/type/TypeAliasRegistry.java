@@ -100,6 +100,15 @@ public class TypeAliasRegistry {
     registerAlias("ResultSet", ResultSet.class);
   }
 
+    /**
+     * 这里是根据别名获取到对应的class类对象
+     * 1.如果别名为null，就返回null
+     * 2.如果别名在map中可以找到对应的class类，就返回
+     * 3.如果在别名的map中找不到，就根据别名创建一个对象返回
+     * @param string
+     * @param <T>
+     * @return
+     */
   @SuppressWarnings("unchecked")
   // throws class cast exception as well if types cannot be assigned
   public <T> Class<T> resolveAlias(String string) {
@@ -107,15 +116,17 @@ public class TypeAliasRegistry {
       if (string == null) {
         return null;
       }
-      // issue #748
+      // issue #748 将别名统一转换为小写，从map集合中获取class类
       String key = string.toLowerCase(Locale.ENGLISH);
       Class<T> value;
       if (TYPE_ALIASES.containsKey(key)) {
         value = (Class<T>) TYPE_ALIASES.get(key);
       } else {
+          /**
+           * 这里的底层是调用java.lang.Class#forName(java.lang.String, boolean, java.lang.ClassLoader)来完成对象的实例化
+           */
         value = (Class<T>) Resources.classForName(string);
       }
-      //拿到了pooledDatasourceFactory
       return value;
     } catch (ClassNotFoundException e) {
       throw new TypeException("Could not resolve type alias '" + string + "'.  Cause: " + e, e);
@@ -126,6 +137,11 @@ public class TypeAliasRegistry {
     registerAliases(packageName, Object.class);
   }
 
+    /**
+     * 这里应该是通过package包名，批量设置别名
+     * @param packageName
+     * @param superType
+     */
   public void registerAliases(String packageName, Class<?> superType){
     ResolverUtil<Class<?>> resolverUtil = new ResolverUtil<>();
     resolverUtil.find(new ResolverUtil.IsA(superType), packageName);

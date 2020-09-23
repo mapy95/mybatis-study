@@ -130,7 +130,9 @@ public class TransactionalCache implements Cache {
     entriesToAddOnCommit.clear();
   }
 
-  //当事务提交的时候，把数据放到真正的二级缓存中
+    /**
+     * 当事务提交的时候，把数据放到真正的二级缓存中
+     */
   public void commit() {
     if (clearOnCommit) {
       delegate.clear();

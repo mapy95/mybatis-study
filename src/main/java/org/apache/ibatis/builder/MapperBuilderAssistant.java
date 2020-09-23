@@ -180,6 +180,10 @@ public class MapperBuilderAssistant extends BaseBuilder {
       Discriminator discriminator,
       List<ResultMapping> resultMappings,
       Boolean autoMapping) {
+      /**
+       * 这里入参的id还是<ResultMap></ResultMap>节点的id属性
+       * 在经过下面这行代码之后，会把namespace加到id属性之前
+       */
     id = applyCurrentNamespace(id, false);
     extend = applyCurrentNamespace(extend, true);
 
@@ -287,6 +291,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         .lang(lang)
         .resultOrdered(resultOrdered)
         .resultSets(resultSets)
+            //这里是根据id和resultType从存入resultMap的集合中获取resultMap
         .resultMaps(getStatementResultMaps(resultMap, resultType, id))
         .resultSetType(resultSetType)
         .flushCacheRequired(valueOrDefault(flushCache, !isSelect))

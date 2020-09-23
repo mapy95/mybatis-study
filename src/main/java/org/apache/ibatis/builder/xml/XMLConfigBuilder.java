@@ -126,7 +126,7 @@ public class XMLConfigBuilder extends BaseBuilder {
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
       reflectorFactoryElement(root.evalNode("reflectorFactory"));
         /**
-         * 全局的配置信息
+         * 解析mybatis.xml全局的配置信息
          */
       settingsElement(settings);
       // read it after objectFactory and objectWrapperFactory issue #631
@@ -401,6 +401,10 @@ public class XMLConfigBuilder extends BaseBuilder {
          * 这也是优先级的根本原因：源码中，就是按照 package  ->  resource  -->  url  -->  class的优先级来解析的
          *
          * resource、URL、class三者只能配置一个，如果三个都配置，会有问题，抛出异常
+         *
+         * 这四种方式，虽然在这里调用的方法不一样，但是底层的处理逻辑，要完成的操作都是一样的
+         *  1.将sql片段(select/update/delete/insert)解析成mappedStatement对象，然后放到mappedStatements这个map集合中，key是根据dao接口的全类名生成的
+         *  2.根据dao接口，生成一个MapperProxyFactory,并存入到 knownMappers 这个map集合中，key是接口的class类
          */
         if ("package".equals(child.getName())) {
           String mapperPackage = child.getStringAttribute("name");
